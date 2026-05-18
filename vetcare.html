@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>VetCare — Aplikasi Dokter Hewan</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --green: #1e7a4a;
+    --green-light: #e8f5ee;
+    --green-mid: #2a9d5c;
+    --navy: #0f1f2e;
+    --slate: #4a5568;
+    --muted: #8a96a8;
+    --bg: #f4f7f5;
+    --white: #ffffff;
+    --border: #e2e8e4;
+    --gold: #d4a336;
+    --red: #e05252;
+    --blue: #3b7dd8;
+    --purple: #7c5cbf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--navy); min-height: 100vh; }
+
+  /* NAVBAR */
+  nav {
+    background: var(--navy);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    height: 62px;
+    gap: 8px;
+    position: sticky; top: 0; z-index: 200;
+    box-shadow: 0 2px 16px #0003;
+  }
+  .logo {
+    font-family: 'Playfair Display', serif;
+    color: white; font-size: 20px; margin-right: 24px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-icon {
+    width: 36px; height: 36px; background: var(--green);
+    border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; font-size: 18px;
+  }
+  .nav-btn {
+    padding: 7px 16px; border-radius: 8px; border: none;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 600; transition: all 0.15s;
+    color: #a0b0c0; background: transparent;
+  }
+  .nav-btn:hover { color: white; background: #ffffff18; }
+  .nav-btn.active { background: var(--green); color: white; }
+
+  /* MAIN */
+  main { max-width: 1200px; margin: 0 auto; padding: 28px 24px; }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* CARDS */
+  .card {
+    background: var(--white); border-radius: 16px;
+    padding: 24px; box-shadow: 0 2px 12px #0001;
+    border: 1px solid var(--border);
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; color: var(--navy); margin-bottom: 16px;
+  }
+
+  /* STAT CARDS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .stat-card {
+    background: white; border-radius: 16px; padding: 18px 20px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 2px 10px #0001; border: 1px solid var(--border);
+  }
+  .stat-icon {
+    width: 50px; height: 50px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    flex-shrink: 0;
+  }
+  .stat-val { font-family: 'Playfair Display', serif; font-size: 26px; color: var(--navy); }
+  .stat-label { font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 1px; }
+
+  /* DASHBOARD GRID */
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* SCHEDULE */
+  .schedule-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid #f0f4f2;
+  }
+  .schedule-row:last-child { border-bottom: none; }
+  .time-badge {
+    background: var(--green-light); color: var(--green);
+    border-radius: 8px; padding: 4px 10px; font-size: 12px;
+    font-weight: 700; min-width: 52px; text-align: center;
+  }
+
+  /* QUICK ACTIONS */
+  .quick-btn {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: 12px; border: 1.5px solid transparent;
+    cursor: pointer; text-align: left; width: 100%;
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+    transition: all 0.15s; margin-bottom: 10px;
+  }
+
+  /* CHAT */
+  .chat-layout { display: grid; grid-template-columns: 270px 1fr; gap: 20px; height: calc(100vh - 180px); }
+  .chat-sidebar { background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--border); overflow-y: auto; }
+  .chat-main { background: white; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+  .chat-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .msg { max-width: 80%; padding: 13px 17px; border-radius: 18px; font-size: 14px; line-height: 1.65; white-space: pre-wrap; }
+  .msg.user { background: var(--green); color: white; border-radius: 18px 18px 4px 18px; align-self: flex-end; }
+  .msg.bot { background: #f4f7f5; color: var(--navy); border-radius: 18px 18px 18px 4px; align-self: flex-start; border: 1px solid var(--border); }
+  .chat-input-bar { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+  .typing-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: bounce 1s infinite; display: inline-block; margin: 0 2px; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
+
+  /* FORM */
+  .form-label { font-size: 12px; color: var(--muted); font-weight: 600; display: block; margin-bottom: 4px; }
+  .form-input {
+    width: 100%; padding: 9px 13px; border-radius: 9px;
+    border: 1.5px solid var(--border); font-family: 'DM Sans', sans-serif;
+    font-size: 13px; outline: none; transition: border 0.15s;
+  }
+  .form-input:focus { border-color: var(--green); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* BUTTONS */
+  .btn {
+    padding: 10px 20px; border-radius: 10px; border: none;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    font-weight: 600; font-size: 14px; transition: all 0.15s;
+  }
+  .btn-green { background: var(--green); color: white; }
+  .btn-green:hover { background: var(--green-mid); }
+  .btn-blue { background: var(--blue); color: white; }
+  .btn-blue:hover { filter: brightness(1.1); }
+  .btn-purple { background: var(--purple); color: white; }
+  .btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* PRESCRIPTION */
+  .rx-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .rx-preview { background: white; border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 2px 12px #0001; }
+  .rx-preview-empty { display: flex; align-items: center; justify-content: center; background: #f4f7f5; border-radius: 16px; border: 2px dashed var(--border); min-height: 400px; flex-direction: column; color: var(--muted); gap: 8px; }
+  .rx-header { background: var(--navy); padding: 22px 26px; color: white; }
+  .rx-body { padding: 24px 26px; }
+  .rx-row { padding: 12px 0; border-bottom: 1px solid #f0f4f2; font-size: 13px; }
+  .drug-block { border-left: 3px solid var(--green); padding: 10px 14px; margin-bottom: 12px; background: var(--green-light); border-radius: 0 8px 8px 0; }
+
+  /* EBOOKS */
+  .ebook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .ebook-card {
+    background: white; border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--border); cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .ebook-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px #0002; }
+  .ebook-cover { padding: 30px 20px; text-align: center; font-size: 54px; }
+  .ebook-info { padding: 16px; }
+  .cat-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; margin-bottom: 8px;
+  }
+  .ebook-title { font-family: 'Playfair Display', serif; font-size: 14px; color: var(--navy); margin-bottom: 5px; line-height: 1.4; }
+  .ebook-author { font-size: 12px; color: var(--muted); }
+  .ebook-pages { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* EBOOK READER */
+  .ebook-reader { display: none; }
+  .ebook-reader.active { display: block; }
+  .ebook-list { display: block; }
+  .ebook-list.hidden { display: none; }
+  .reader-header { padding: 26px 30px; color: white; display: flex; gap: 20px; align-items: center; }
+  .reader-body { padding: 30px; font-size: 14px; line-height: 1.85; color: var(--slate); white-space: pre-wrap; min-height: 300px; }
+
+  /* PATIENTS */
+  .patients-table { width: 100%; border-collapse: collapse; }
+  .patients-table th { padding: 13px 16px; text-align: left; font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #f4f7f5; }
+  .patients-table td { padding: 14px 16px; font-size: 13px; border-top: 1px solid var(--border); }
+  .patients-table tr:hover td { background: #f9fafb; }
+  .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+
+  /* DRUG ROW */
+  .drug-row { background: #f4f7f5; border-radius: 12px; padding: 14px; margin-bottom: 10px; border: 1px solid var(--border); }
+  .drug-row-header { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
+
+  /* AI SUGGESTION BOX */
+  .ai-box { background: #f0eaff; border: 1px solid #c4b0f0; border-radius: 10px; padding: 14px; font-size: 13px; color: #3b1d7a; white-space: pre-wrap; max-height: 180px; overflow-y: auto; margin-top: 12px; }
+
+  @media (max-width: 768px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .dash-grid, .chat-layout, .rx-layout, .form-grid { grid-template-columns: 1fr; }
+    nav { padding: 0 12px; gap: 4px; }
+    .nav-btn { padding: 6px 10px; font-size: 12px; }
+  }
+  @media print {
+    nav, .rx-layout > *:first-child, .btn { display: none !important; }
+    .rx-preview { box-shadow: none; border: none; }
+    .rx-layout { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">🐾</div>
+    VetCare
+  </div>
+  <button class="nav-btn active" onclick="showPage('dashboard')">🏠 Dashboard</button>
+  <button class="nav-btn" onclick="showPage('konsultasi')">💬 Konsultasi</button>
+  <button class="nav-btn" onclick="showPage('resep')">💊 Resep Dokter</button>
+  <button class="nav-btn" onclick="showPage('ebook')">📚 E-Book</button>
+  <button class="nav-btn" onclick="showPage('pasien')">🐾 Pasien</button>
+</nav>
+
+<main>
+
+<!-- ===== DASHBOARD ===== -->
+<div id="page-dashboard" class="page active">
+  <div style="margin-bottom:24px">
+    <h2 style="font-family:'Playfair Display',serif;font-size:22px;color:var(--navy)">Selamat datang, <span style="color:var(--green)">drh. Ahmad Fauzi</span> 👋</h2>
+    <p style="color:var(--muted);font-size:14px;margin-top:5px" id="today-date"></p>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e8f5ee">🐾</div>
+      <div><div class="stat-val">12</div><div class="stat-label">Pasien Hari Ini</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#dbeafe">💬</div>
+      <div><div class="stat-val">4</div><div class="stat-label">Konsultasi Aktif</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fef3c7">💊</div>
+      <div><div class="stat-val">8</div><div class="stat-label">Resep Dibuat</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#ede9fe">📚</div>
+      <div><div class="stat-val">6</div><div class="stat-label">E-Book Tersedia</div></div>
+    </div>
+  </div>
+  <div class="dash-grid">
+    <div class="card">
+      <div class="card-title">🗓️ Jadwal Konsultasi Hari Ini</div>
+      <div class="schedule-row"><div class="time-badge">09:00</div><div><div style="font-weight:600;font-size:14px">Buddy (Anjing)</div><div style="font-size:12px;color:var(--muted)">Budi S. · Vaksinasi</div></div></div>
+      <div class="schedule-row"><div class="time-badge">10:30</div><div><div style="font-weight:600;font-size:14px">Mochi (Kucing)</div><div style="font-size:12px;color:var(--muted)">Ani W. · Kontrol</div></div></div>
+      <div class="schedule-row"><div class="time-badge">13:00</div><div><div style="font-weight:600;font-size:14px">Kiko (Kelinci)</div><div style="font-size:12px;color:var(--muted)">Dina P. · Pemeriksaan</div></div></div>
+      <div class="schedule-row"><div class="time-badge">15:00</div><div><div style="font-weight:600;font-size:14px">Luna (Kucing)</div><div style="font-size:12px;color:var(--muted)">Reza M. · Darurat</div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚡ Aksi Cepat</div>
+      <button class="quick-btn" onclick="showPage('konsultasi')" style="background:#e8f5ee;border-color:#b6dcc8;color:var(--green)">
+        <span style="font-size:20px">💬</span> Mulai Konsultasi Baru
+      </button>
+      <button class="quick-btn" onclick="showPage('resep')" style="background:#dbeafe;border-color:#b3d0f5;color:var(--blue)">
+        <span style="font-size:20px">💊</span> Buat Resep Dokter
+      </button>
+      <button class="quick-btn" onclick="showPage('ebook')" style="background:#ede9fe;border-color:#c4b0f0;color:var(--purple)">
+        <span style="font-size:20px">📚</span> Buka Perpustakaan E-Book
+      </button>
+      <button class="quick-btn" onclick="showPage('pasien')" style="background:#fef3c7;border-color:#f5d98a;color:#a16207">
+        <span style="font-size:20px">🐾</span> Lihat Data Pasien
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== KONSULTASI ===== -->
+<div id="page-konsultasi" class="page">
+  <div class="chat-layout">
+    <div class="chat-sidebar">
+      <div class="card-title" style="margin-bottom:14px">🐾 Data Pasien</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div><label class="form-label">Nama Hewan</label><input class="form-input" id="c-name" placeholder="cth: Buddy"/></div>
+        <div><label class="form-label">Jenis Hewan</label><input class="form-input" id="c-species" placeholder="cth: Anjing, Kucing"/></div>
+        <div><label class="form-label">Usia</label><input class="form-input" id="c-age" placeholder="cth: 3 tahun"/></div>
+        <div><label class="form-label">Berat Badan (kg)</label><input class="form-input" id="c-weight" placeholder="cth: 5.2"/></div>
+        <div style="background:var(--green-light);border-radius:10px;padding:12px;font-size:12px;color:var(--green);margin-top:4px">
+          💡 Isi data pasien untuk konsultasi yang lebih akurat
+        </div>
+      </div>
+    </div>
+    <div class="chat-main">
+      <div class="chat-header">
+        <div style="width:38px;height:38px;border-radius:10px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:18px">🩺</div>
+        <div>
+          <div style="font-weight:700;font-size:15px">Konsultasi AI Dokter Hewan</div>
+          <div style="font-size:12px;color:var(--green)">● Online · Powered by AI</div>
+        </div>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="msg bot">Selamat datang di sistem konsultasi VetCare! Saya siap membantu Anda dengan pertanyaan medis hewan. Silakan jelaskan keluhan atau gejala pasien Anda. 🩺</div>
+      </div>
+      <div class="chat-input-bar">
+        <input class="form-input" id="chat-input" placeholder="Tulis gejala atau pertanyaan medis..." style="flex:1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"/>
+        <button class="btn btn-green" id="chat-send-btn" onclick="sendChat()">Kirim</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RESEP ===== -->
+<div id="page-resep" class="page">
+  <div class="rx-layout">
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <div class="card">
+        <div class="card-title">📋 Data Pasien & Diagnosis</div>
+        <div class="form-grid" style="margin-bottom:10px">
+          <div><label class="form-label">Nama Hewan</label><input class="form-input" id="r-name" placeholder="Buddy"/></div>
+          <div><label class="form-label">Jenis Hewan</label><input class="form-input" id="r-species" placeholder="Anjing"/></div>
+          <div><label class="form-label">Nama Pemilik</label><input class="form-input" id="r-owner" placeholder="Budi Santoso"/></div>
+          <div><label class="form-label">Usia</label><input class="form-input" id="r-age" placeholder="3 tahun"/></div>
+          <div><label class="form-label">Berat Badan (kg)</label><input class="form-input" id="r-weight" placeholder="5.2"/></div>
+        </div>
+        <div><label class="form-label">Diagnosis</label><input class="form-input" id="r-diagnosis" placeholder="cth: Gastroenteritis akut, Infeksi kulit..."/></div>
+        <button class="btn btn-purple" style="width:100%;margin-top:12px" id="ai-suggest-btn" onclick="getAISuggestion()">🤖 Dapatkan Saran Obat dari AI</button>
+        <div id="ai-suggestion" class="ai-box" style="display:none"></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="card-title" style="margin:0">💊 Daftar Obat</div>
+          <button class="btn btn-green btn-sm" onclick="addDrug()">+ Tambah</button>
+        </div>
+        <div id="drugs-container"></div>
+      </div>
+
+      <div class="card">
+        <label class="form-label">Catatan Tambahan</label>
+        <textarea class="form-input" id="r-notes" rows="3" placeholder="cth: Berikan bersama makanan, hindari sinar matahari..." style="resize:none"></textarea>
+        <button class="btn btn-blue" style="width:100%;margin-top:12px;font-size:15px;padding:12px" onclick="generateRx()">📄 Generate Resep</button>
+      </div>
+    </div>
+
+    <div id="rx-empty" class="rx-preview-empty">
+      <div style="font-size:60px">📄</div>
+      <div style="font-size:16px;font-weight:600">Preview Resep</div>
+      <div style="font-size:13px">Isi form & klik Generate Resep</div>
+    </div>
+    <div id="rx-preview" class="rx-preview" style="display:none">
+      <div class="rx-header">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700">🐾 VetCare Clinic</div>
+            <div style="font-size:12px;opacity:.8;margin-top:2px">Klinik Hewan Sehat Selalu</div>
+            <div style="font-size:11px;opacity:.65;margin-top:1px">Jl. Kesehatan No. 12, Jakarta</div>
+          </div>
+          <div style="text-align:right;font-size:12px;opacity:.85">
+            <div style="font-weight:700;font-size:14px">drh. Ahmad Fauzi</div>
+            <div>SIP: 123/DRH/2024</div>
+            <div id="rx-date"></div>
+          </div>
+        </div>
+      </div>
+      <div class="rx-body">
+        <div id="rx-patient-info"></div>
+        <div style="font-family:'Playfair Display',serif;font-size:32px;color:var(--green);margin:16px 0 14px">℞</div>
+        <div id="rx-drugs-list"></div>
+        <div id="rx-notes-block"></div>
+        <div style="margin-top:40px;display:flex;justify-content:flex-end">
+          <div style="text-align:center">
+            <div style="width:130px;height:55px;border:2px dashed var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);margin-bottom:8px">TTD & Stempel</div>
+            <div style="font-size:13px;font-weight:600">drh. Ahmad Fauzi</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button class="btn btn-green" style="flex:1" onclick="window.print()">🖨️ Cetak Resep</button>
+          <button class="btn btn-sm" style="background:#fee2e2;color:var(--red)" onclick="resetRx()">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EBOOK ===== -->
+<div id="page-ebook" class="page">
+  <div class="ebook-list" id="ebook-list">
+    <input class="form-input" id="ebook-search" placeholder="🔍 Cari e-book..." style="max-width:400px;margin-bottom:20px" oninput="filterEbooks()"/>
+    <div class="ebook-grid" id="ebook-grid"></div>
+  </div>
+  <div class="ebook-reader" id="ebook-reader">
+    <button class="btn btn-sm" style="background:#f0f4f2;color:var(--navy);margin-bottom:16px" onclick="closeReader()">← Kembali ke Perpustakaan</button>
+    <div style="background:white;border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 12px #0001">
+      <div class="reader-header" id="reader-header"></div>
+      <div class="reader-body" id="reader-body">
+        <div style="text-align:center;padding:60px;color:var(--muted)">
+          <div style="font-size:40px;margin-bottom:12px">📖</div>
+          <div>Memuat konten e-book dengan AI...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PASIEN ===== -->
+<div id="page-pasien" class="page">
+  <div style="display:flex;gap:12px;margin-bottom:20px;align-items:center">
+    <input class="form-input" id="patient-search" placeholder="🔍 Cari nama hewan atau pemilik..." style="flex:1;max-width:400px" oninput="filterPatients()"/>
+    <button class="btn btn-green">+ Pasien Baru</button>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <table class="patients-table" id="patients-table">
+      <thead>
+        <tr>
+          <th>Hewan</th><th>Jenis/Ras</th><th>Usia</th><th>Pemilik</th><th>Kunjungan Terakhir</th><th>Status</th><th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="patients-body"></tbody>
+    </table>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ============ DATA ============
+const PATIENTS = [
+  { id:1, name:"Buddy", species:"Anjing", breed:"Golden Retriever", age:"3 thn", owner:"Budi Santoso", lastVisit:"12 Mei 2026", status:"Sehat" },
+  { id:2, name:"Mochi", species:"Kucing", breed:"Persian", age:"2 thn", owner:"Ani Wijaya", lastVisit:"14 Mei 2026", status:"Dalam Perawatan" },
+  { id:3, name:"Kiko", species:"Kelinci", breed:"Holland Lop", age:"1 thn", owner:"Dina Pratiwi", lastVisit:"15 Mei 2026", status:"Sehat" },
+];
+
+const EBOOKS = [
+  { id:1, title:"Panduan Vaksinasi Anjing & Kucing", author:"Dr. Hendra, drh.", pages:48, category:"Pencegahan", cover:"🐶", color:"#1e7a4a" },
+  { id:2, title:"Nutrisi Optimal untuk Hewan Peliharaan", author:"Dr. Sari Dewi, drh.", pages:62, category:"Nutrisi", cover:"🥗", color:"#d4a336" },
+  { id:3, title:"Pertolongan Pertama pada Hewan", author:"Dr. Ahmad, drh.", pages:35, category:"Darurat", cover:"🚑", color:"#e05252" },
+  { id:4, title:"Penyakit Umum pada Kucing", author:"Dr. Maya, drh.", pages:55, category:"Penyakit", cover:"🐱", color:"#3b7dd8" },
+  { id:5, title:"Manajemen Klinik Hewan Modern", author:"Dr. Rizki, drh.", pages:80, category:"Manajemen", cover:"🏥", color:"#7c5cbf" },
+  { id:6, title:"Perawatan Reptil sebagai Hewan Peliharaan", author:"Dr. Lina, drh.", pages:42, category:"Eksotis", cover:"🦎", color:"#d97706" },
+];
+
+const MEDS = ["Amoxicillin","Metronidazole","Ivermectin","Dexamethasone","Furosemide","Meloxicam","Omeprazole","Prednisolone","Enrofloxacin","Cefalexin"];
+
+// ============ NAVIGATION ============
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ============ DATE ============
+const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const now = new Date();
+document.getElementById('today-date').textContent = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} · Klinik Hewan Sehat Selalu`;
+
+// ============ CHAT ============
+let chatHistory = [];
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const name = document.getElementById('c-name').value;
+  const species = document.getElementById('c-species').value;
+  const age = document.getElementById('c-age').value;
+  const weight = document.getElementById('c-weight').value;
+
+  appendMsg('user', msg);
+  chatHistory.push({ role:'user', content: msg });
+
+  const typingEl = appendMsg('bot', '<span class="typing-dot" style="animation-delay:0s"></span><span class="typing-dot" style="animation-delay:.2s"></span><span class="typing-dot" style="animation-delay:.4s"></span>');
+
+  document.getElementById('chat-send-btn').disabled = true;
+
+  const patientCtx = name ? `Pasien: ${name}, ${species||'hewan'}, usia ${age||'tidak diketahui'}, berat ${weight||'?'}kg.` : '';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`Kamu adalah asisten dokter hewan profesional (drh.) berpengalaman. Berikan saran medis yang akurat dan mudah dipahami dalam Bahasa Indonesia. ${patientCtx} Jika ada keadaan darurat, selalu sarankan ke klinik. Berikan jawaban terstruktur dengan diagnosis kemungkinan, saran penanganan, dan tindak lanjut. Gunakan emoji yang relevan.`,
+        messages: chatHistory
+      })
+    });
+    const data = await resp.json();
+    const reply = data.content?.[0]?.text || 'Maaf, terjadi kesalahan. Coba lagi.';
+    chatHistory.push({ role:'assistant', content: reply });
+    typingEl.innerHTML = reply;
+  } catch(e) {
+    typingEl.innerHTML = '❌ Koneksi gagal. Periksa koneksi internet Anda.';
+  }
+
+  document.getElementById('chat-send-btn').disabled = false;
+  scrollChat();
+}
+
+function appendMsg(role, html) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role==='user' ? 'user':'bot');
+  div.innerHTML = html;
+  document.getElementById('chat-messages').appendChild(div);
+  scrollChat();
+  return div;
+}
+function scrollChat() {
+  const el = document.getElementById('chat-messages');
+  el.scrollTop = el.scrollHeight;
+}
+
+// ============ DRUGS ============
+let drugs = [{ name:'', dose:'', freq:'', duration:'' }];
+
+function renderDrugs() {
+  const container = document.getElementById('drugs-container');
+  container.innerHTML = '';
+  drugs.forEach((d,i) => {
+    const medOptions = MEDS.map(m=>`<option value="${m}">`).join('');
+    container.innerHTML += `
+    <div class="drug-row">
+      <div class="drug-row-header">
+        <span style="font-weight:600;font-size:13px;color:var(--navy)">Obat #${i+1}</span>
+        ${drugs.length > 1 ? `<button class="btn btn-sm" style="background:#fee2e2;color:var(--red)" onclick="removeDrug(${i})">Hapus</button>` : ''}
+      </div>
+      <datalist id="meds-${i}">${medOptions}</datalist>
+      <div class="form-grid">
+        <div><label class="form-label">Nama Obat</label>
+          <input class="form-input" list="meds-${i}" value="${d.name}" oninput="drugs[${i}].name=this.value" placeholder="cth: Amoxicillin"/></div>
+        <div><label class="form-label">Dosis</label>
+          <input class="form-input" value="${d.dose}" oninput="drugs[${i}].dose=this.value" placeholder="cth: 10mg/kg"/></div>
+        <div><label class="form-label">Frekuensi</label>
+          <select class="form-input" onchange="drugs[${i}].freq=this.value">
+            <option ${d.freq===''?'selected':''} value="">Pilih...</option>
+            <option ${d.freq==='1x sehari'?'selected':''}>1x sehari</option>
+            <option ${d.freq==='2x sehari'?'selected':''}>2x sehari</option>
+            <option ${d.freq==='3x sehari'?'selected':''}>3x sehari</option>
+            <option ${d.freq==='Setiap 8 jam'?'selected':''}>Setiap 8 jam</option>
+          </select></div>
+        <div><label class="form-label">Durasi</label>
+          <input class="form-input" value="${d.duration}" oninput="drugs[${i}].duration=this.value" placeholder="cth: 7 hari"/></div>
+      </div>
+    </div>`;
+  });
+}
+function addDrug() { drugs.push({ name:'', dose:'', freq:'', duration:'' }); renderDrugs(); }
+function removeDrug(i) { drugs.splice(i,1); renderDrugs(); }
+renderDrugs();
+
+// ============ AI SUGGESTION ============
+async function getAISuggestion() {
+  const diagnosis = document.getElementById('r-diagnosis').value;
+  const species = document.getElementById('r-species').value;
+  const weight = document.getElementById('r-weight').value;
+  const age = document.getElementById('r-age').value;
+  if (!diagnosis) { alert('Isi diagnosis terlebih dahulu!'); return; }
+
+  const btn = document.getElementById('ai-suggest-btn');
+  btn.disabled = true; btn.textContent = '🤖 Memuat saran AI...';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system:'Kamu adalah dokter hewan berpengalaman. Berikan saran obat terstruktur dalam Bahasa Indonesia. Sebutkan nama obat, dosis, frekuensi, durasi, dan cara pemberian. Berikan 2-3 pilihan obat utama. Gunakan emoji.',
+        messages:[{ role:'user', content:`Diagnosis: ${diagnosis}. Pasien: ${species||'hewan'}, berat ${weight||'?'}kg, usia ${age||'tidak diketahui'}. Berikan saran resep obat yang tepat.` }]
+      })
+    });
+    const data = await resp.json();
+    const box = document.getElementById('ai-suggestion');
+    box.textContent = data.content?.[0]?.text || 'Tidak ada saran tersedia.';
+    box.style.display = 'block';
+  } catch { alert('Gagal memuat saran AI.'); }
+
+  btn.disabled = false; btn.textContent = '🤖 Dapatkan Saran Obat dari AI';
+}
+
+// ============ GENERATE PRESCRIPTION ============
+function generateRx() {
+  const name = document.getElementById('r-name').value || '-';
+  const species = document.getElementById('r-species').value || '-';
+  const owner = document.getElementById('r-owner').value || '-';
+  const age = document.getElementById('r-age').value || '-';
+  const weight = document.getElementById('r-weight').value;
+  const diagnosis = document.getElementById('r-diagnosis').value || '-';
+  const notes = document.getElementById('r-notes').value;
+
+  document.getElementById('rx-date').textContent = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+
+  document.getElementById('rx-patient-info').innerHTML = `
+    <div style="background:#f4f7f5;border-radius:12px;padding:16px;border:1px solid var(--border);margin-bottom:4px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">
+        <div><span style="color:var(--muted)">Pasien:</span> <strong>${name}</strong></div>
+        <div><span style="color:var(--muted)">Jenis:</span> <strong>${species}</strong></div>
+        <div><span style="color:var(--muted)">Pemilik:</span> <strong>${owner}</strong></div>
+        <div><span style="color:var(--muted)">Berat:</span> <strong>${weight ? weight+' kg' : '-'}</strong></div>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:13px">
+        <span style="color:var(--muted)">Diagnosis:</span> <strong>${diagnosis}</strong>
+      </div>
+    </div>`;
+
+  const activeDrugs = drugs.filter(d => d.name.trim());
+  document.getElementById('rx-drugs-list').innerHTML = activeDrugs.length
+    ? activeDrugs.map((d,i) => `
+        <div class="drug-block">
+          <div style="font-weight:700;color:var(--navy);font-size:15px">${i+1}. ${d.name}</div>
+          <div style="font-size:13px;color:var(--slate);margin-top:3px">Dosis: ${d.dose||'-'} · ${d.freq||'-'} · selama ${d.duration||'-'}</div>
+        </div>`).join('')
+    : '<p style="color:var(--muted);font-size:13px">Belum ada obat ditambahkan.</p>';
+
+  document.getElementById('rx-notes-block').innerHTML = notes
+    ? `<div style="margin-top:8px;padding:12px;background:#fef9c3;border-radius:8px;font-size:13px;color:#92400e;border:1px solid #fde68a"><strong>Catatan:</strong> ${notes}</div>`
+    : '';
+
+  document.getElementById('rx-empty').style.display = 'none';
+  document.getElementById('rx-preview').style.display = 'block';
+}
+function resetRx() {
+  document.getElementById('rx-empty').style.display = 'flex';
+  document.getElementById('rx-preview').style.display = 'none';
+}
+
+// ============ EBOOKS ============
+function renderEbooks(list) {
+  document.getElementById('ebook-grid').innerHTML = list.map(e => `
+    <div class="ebook-card" onclick="openEbook(${e.id})">
+      <div class="ebook-cover" style="background:${e.color}18">${e.cover}</div>
+      <div class="ebook-info">
+        <span class="cat-badge" style="background:${e.color}20;color:${e.color}">${e.category}</span>
+        <div class="ebook-title">${e.title}</div>
+        <div class="ebook-author">${e.author}</div>
+        <div class="ebook-pages">📄 ${e.pages} halaman</div>
+        <button class="btn btn-sm" style="width:100%;margin-top:12px;background:${e.color};color:white">📖 Baca Sekarang</button>
+      </div>
+    </div>`).join('');
+}
+renderEbooks(EBOOKS);
+
+function filterEbooks() {
+  const q = document.getElementById('ebook-search').value.toLowerCase();
+  renderEbooks(EBOOKS.filter(e => e.title.toLowerCase().includes(q) || e.category.toLowerCase().includes(q)));
+}
+
+async function openEbook(id) {
+  const book = EBOOKS.find(e => e.id === id);
+  document.getElementById('ebook-list').classList.add('hidden');
+  document.getElementById('ebook-reader').classList.add('active');
+
+  document.getElementById('reader-header').style.background = book.color;
+  document.getElementById('reader-header').innerHTML = `
+    <div style="font-size:60px">${book.cover}</div>
+    <div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:5px">${book.title}</div>
+      <div style="opacity:.85">${book.author}</div>
+      <div style="opacity:.7;font-size:13px;margin-top:4px">📄 ${book.pages} halaman · ${book.category}</div>
+    </div>`;
+
+  document.getElementById('reader-body').innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📖</div><div>Memuat konten dengan AI...</div></div>`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system:'Kamu adalah penulis buku kedokteran hewan. Buat ringkasan konten e-book yang informatif dan menarik dalam Bahasa Indonesia. Gunakan format dengan bab-bab, poin penting, dan tips praktis. Gunakan emoji.',
+        messages:[{ role:'user', content:`Tulis ringkasan konten e-book berjudul "${book.title}" karya ${book.author}. Sertakan: pendahuluan, 3-4 bab utama dengan poin-poin penting, dan kesimpulan. Sekitar 500 kata.` }]
+      })
+    });
+    const data = await resp.json();
+    document.getElementById('reader-body').textContent = data.content?.[0]?.text || 'Konten tidak tersedia.';
+  } catch {
+    document.getElementById('reader-body').textContent = 'Gagal memuat konten. Periksa koneksi internet.';
+  }
+}
+
+function closeReader() {
+  document.getElementById('ebook-list').classList.remove('hidden');
+  document.getElementById('ebook-reader').classList.remove('active');
+}
+
+// ============ PATIENTS ============
+function renderPatients(list) {
+  const statusStyle = { 'Sehat':'background:#e8f5ee;color:#1e7a4a', 'Dalam Perawatan':'background:#fef3c7;color:#92400e' };
+  document.getElementById('patients-body').innerHTML = list.map(p => `
+    <tr>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.species} · ${p.breed}</td>
+      <td>${p.age}</td>
+      <td>${p.owner}</td>
+      <td>${p.lastVisit}</td>
+      <td><span class="status-badge" style="${statusStyle[p.status]||''}">${p.status}</span></td>
+      <td>
+        <button class="btn btn-sm" style="background:#dbeafe;color:#1d4ed8;margin-right:6px">Detail</button>
+        <button class="btn btn-sm" style="background:#e8f5ee;color:#1e7a4a">Konsultasi</button>
+      </td>
+    </tr>`).join('');
+}
+renderPatients(PATIENTS);
+
+function filterPatients() {
+  const q = document.getElementById('patient-search').value.toLowerCase();
+  renderPatients(PATIENTS.filter(p => p.name.toLowerCase().includes(q) || p.owner.toLowerCase().includes(q) || p.species.toLowerCase().includes(q)));
+}
+</script>
+</body>
+</html>
